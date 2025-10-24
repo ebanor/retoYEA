@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-ProyectoRetoYeaApplication<reto>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.mikeldi.demo.ProyectoRetoYeaApplication",
+            "projectName": "reto",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}
