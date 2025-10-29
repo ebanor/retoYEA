@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nuevo Producto - ProyectoRetoYEA</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/web/dashboard">
+                <i class="bi bi-building"></i> ProyectoRetoYEA
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/web/dashboard">
+                            <i class="bi bi-speedometer2"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/web/clientes">
+                            <i class="bi bi-people"></i> Clientes
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/web/productos">
+                            <i class="bi bi-box"></i> Productos
+                        </a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" 
+                           data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle"></i> <span id="userName">Usuario</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#" id="logoutBtn">
+                                <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+                            </a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Contenido -->
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-8 mx-auto">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1><i class="bi bi-box-seam"></i> Nuevo Producto</h1>
+                    <a href="/web/productos" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Volver
+                    </a>
+                </div>
+                
+                <div class="card">
+                    <div class="card-body">
+                        <form id="productoForm">
+                            <div class="row">
+                                <div class="col-md-8 mb-3">
+                                    <label for="nombre" class="form-label">Nombre <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="nombre" required>
+                                </div>
+                                
+                                <div class="col-md-4 mb-3">
+                                    <label for="categoria" class="form-label">Categoría</label>
+                                    <input type="text" class="form-control" id="categoria" 
+                                           list="categoriasList" placeholder="Ej: Electrónica">
+                                    <datalist id="categoriasList">
+                                        <option value="Electrónica">
+                                        <option value="Informática">
+                                        <option value="Oficina">
+                                        <option value="Mobiliario">
+                                    </datalist>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="descripcion" class="form-label">Descripción</label>
+                                <textarea class="form-control" id="descripcion" rows="3"></textarea>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="precio" class="form-label">Precio (€) <span class="text-danger">*</span></label>
+                                    <input type="number" class="form-control" id="precio" 
+                                           step="0.01" min="0.01" required>
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label for="iva" class="form-label">IVA (%) <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="iva" required>
+                                        <option value="">Selecciona IVA</option>
+                                        <option value="0">0% - Exento</option>
+                                        <option value="4">4% - Superreducido</option>
+                                        <option value="10">10% - Reducido</option>
+                                        <option value="21" selected>21% - General</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="stockActual" class="form-label">Stock Actual <span class="text-danger">*</span></label>
+                                    <input type="number" class="form-control" id="stockActual" 
+                                           min="0" value="0" required>
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label for="stockMinimo" class="form-label">Stock Mínimo <span class="text-danger">*</span></label>
+                                    <input type="number" class="form-control" id="stockMinimo" 
+                                           min="0" value="5" required>
+                                    <div class="form-text">Alerta cuando el stock sea menor o igual a este valor</div>
+                                </div>
+                            </div>
+                            
+                            <hr>
+                            
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle"></i>
+                                <strong>Precio con IVA:</strong> <span id="precioConIva">0.00 €</span>
+                            </div>
+                            
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <a href="/web/productos" class="btn btn-secondary">
+                                    <i class="bi bi-x-circle"></i> Cancelar
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-save"></i> <span id="btnText">Guardar Producto</span>
+                                    <span id="btnSpinner" class="spinner-border spinner-border-sm d-none"></span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const token = localStorage.getItem('jwt_token');
+        const userName = localStorage.getItem('user_name');
+        
+        if (!token) {
+            window.location.href = '/web/login';
+        }
+        
+        document.getElementById('userName').textContent = userName || 'Usuario';
+        
+        // Calcular precio con IVA
+        function calcularPrecioConIva() {
+            const precio = parseFloat(document.getElementById('precio').value) || 0;
+            const iva = parseFloat(document.getElementById('iva').value) || 0;
+            const precioConIva = precio + (precio * iva / 100);
+            document.getElementById('precioConIva').textContent = precioConIva.toFixed(2) + ' €';
+        }
+        
+        document.getElementById('precio').addEventListener('input', calcularPrecioConIva);
+        document.getElementById('iva').addEventListener('change', calcularPrecioConIva);
+        
+        // Enviar formulario
+        document.getElementById('productoForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const btnText = document.getElementById('btnText');
+            const btnSpinner = document.getElementById('btnSpinner');
+            
+            btnText.classList.add('d-none');
+            btnSpinner.classList.remove('d-none');
+            
+            const productoData = {
+                nombre: document.getElementById('nombre').value,
+                descripcion: document.getElementById('descripcion').value || null,
+                precio: parseFloat(document.getElementById('precio').value),
+                iva: parseFloat(document.getElementById('iva').value),
+                stockActual: parseInt(document.getElementById('stockActual').value),
+                stockMinimo: parseInt(document.getElementById('stockMinimo').value),
+                categoria: document.getElementById('categoria').value || null
+            };
+            
+            try {
+                const response = await fetch('/api/productos', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify(productoData)
+                });
+                
+                if (response.ok) {
+                    alert('Producto creado correctamente');
+                    window.location.href = '/web/productos';
+                } else {
+                    const error = await response.json();
+                    alert('Error: ' + (error.message || 'No se pudo crear el producto'));
+                    btnText.classList.remove('d-none');
+                    btnSpinner.classList.add('d-none');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error de conexión');
+                btnText.classList.remove('d-none');
+                btnSpinner.classList.add('d-none');
+            }
+        });
+        
+        document.getElementById('logoutBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            localStorage.clear();
+            window.location.href = '/web/login';
+        });
+    </script>
+</body>
+</html>
