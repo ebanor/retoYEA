@@ -1,6 +1,6 @@
 package com.mikeldi.reto.config;
 
-import com.mikeldi.reto.security.CustomUserDetailsService;
+import com.mikeldi.reto.service.CustomUserDetailsService;
 import com.mikeldi.reto.security.JwtAuthenticationFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -52,6 +52,7 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
+                // Rutas completamente públicas (sin autenticación)
                 .requestMatchers(
                     "/api/auth/**",
                     "/api/health",
@@ -59,12 +60,15 @@ public class SecurityConfig {
                     "/api-docs/**",
                     "/v3/api-docs/**",
                     "/swagger-ui.html",
-                    "/web/**",           // AÑADIR ESTO
-                    "/css/**",           // AÑADIR ESTO
-                    "/js/**",            // AÑADIR ESTO
-                    "/images/**"         // AÑADIR ESTO
+                    "/css/**",
+                    "/js/**",
+                    "/images/**",
+                    "/favicon.ico"
                 ).permitAll()
-                .requestMatchers("/api/usuarios/**").hasRole("ADMIN")
+                // Rutas WEB - permitir acceso (la validación de JWT se hace en el filtro)
+                .requestMatchers("/web/**").permitAll()
+                // Rutas API - requieren autenticación JWT
+                .requestMatchers("/api/**").authenticated()
                 .anyRequest().authenticated()
             )
             .authenticationProvider(authenticationProvider())

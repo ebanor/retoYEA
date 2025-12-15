@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ver Factura - ProyectoRetoYEA</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+</head>
+<body>
+    <!-- NAVBAR FRAGMENT -->
+    <div th:replace="~{fragments/navbar :: navbar('facturas')}"></div>
+    
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="bi bi-receipt"></i> Factura <span id="numeroFactura"></span></h1>
+            <a href="/web/facturas" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Volver</a>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title">Datos de la Factura</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-2"><strong>Cliente:</strong> <span id="clienteNombre"></span></div>
+                            <div class="col-md-6 mb-2"><strong>Fecha Emisión:</strong> <span id="fechaEmision"></span></div>
+                            <div class="col-md-6 mb-2"><strong>Fecha Vencimiento:</strong> <span id="fechaVencimiento"></span></div>
+                            <div class="col-md-6 mb-2"><strong>Estado:</strong> <span id="estado"></span></div>
+                            <div class="col-12 mb-2"><strong>Observaciones:</strong> <span id="observaciones"></span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title">Total</h5>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Base:</span><strong id="totalBase"></strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>IVA:</span><strong id="totalIva"></strong>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between">
+                            <h5>Total:</h5><h5 id="totalFinal"></h5>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Cambiar Estado</h5>
+                        <select class="form-select mb-3" id="estadoSelect">
+                            <option value="PENDIENTE">Pendiente</option>
+                            <option value="PAGADA">Pagada</option>
+                            <option value="VENCIDA">Vencida</option>
+                            <option value="CANCELADA">Cancelada</option>
+                        </select>
+                        <button class="btn btn-primary w-100" id="cambiarEstadoBtn">
+                            <i class="bi bi-arrow-repeat"></i> Actualizar Estado
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- NAVBAR SCRIPT FRAGMENT -->
+    <script th:replace="~{fragments/navbar :: navbar-script}"></script>
+    
+    <script>
+        const token = localStorage.getItem('jwt_token');
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const facturaId = urlParams.get('id');
+        
+        if (!facturaId) {
+            alert('ID de factura no especificado');
+            window.location.href = '/web/facturas';
+        }
+        
+        async function cargarFactura() {
+            try {
+                const response = await fetch(`/api/facturas/${facturaId}`, {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                
+                if (!response.ok) {
+                    alert('Factura no encontrada');
+                    window.location.href = '/web/facturas';
+                    return;
+                }
+                
+                const factura = await response.json();
+                
+                document.getElementById('numeroFactura').textContent = factura.numeroFactura;
+                document.getElementById('clienteNombre').textContent = factura.clienteNombre;
+                document.getElementById('fechaEmision').textContent = new Date(factura.fechaEmision).toLocaleDateString();
+                document.getElementById('fechaVencimiento').textContent = new Date(factura.fechaVencimiento).toLocaleDateString();
+                
+                const estadoClass = {
+                    'PENDIENTE': 'warning',
+                    'PAGADA': 'success',
+                    'VENCIDA': 'danger',
+                    'CANCELADA': 'secondary'
+                }[factura.estado] || 'secondary';
+                
+                document.getElementById('estado').innerHTML = `<span class="badge bg-${estadoClass}">${factura.estado}</span>`;
+                document.getElementById('observaciones').textContent = factura.observaciones || 'Sin observaciones';
+                document.getElementById('totalBase').textContent = factura.totalBase.toFixed(2) + ' €';
+                document.getElementById('totalIva').textContent = factura.totalIva.toFixed(2) + ' €';
+                document.getElementById('totalFinal').textContent = factura.totalFinal.toFixed(2) + ' €';
+                
+                document.getElementById('estadoSelect').value = factura.estado;
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al cargar la factura');
+                window.location.href = '/web/facturas';
+            }
+        }
+        
+        document.getElementById('cambiarEstadoBtn').addEventListener('click', async () => {
+            const nuevoEstado = document.getElementById('estadoSelect').value;
+            
+            try {
+                const response = await fetch(`/api/facturas/${facturaId}/estado?estado=${nuevoEstado}`, {
+                    method: 'PATCH',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                
+                if (response.ok) {
+                    alert('Estado actualizado correctamente');
+                    cargarFactura();
+                } else {
+                    alert('Error al actualizar el estado');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error de conexión');
+            }
+        });
+        
+        cargarFactura();
+    </script>
+</body>
+</html>

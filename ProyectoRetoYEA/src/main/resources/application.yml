@@ -1,0 +1,41 @@
+server:
+  port: 8080
+  address: 0.0.0.0
+
+spring:
+  application:
+    name: ProyectoRetoYEA
+  datasource:
+    url: jdbc:mysql://localhost:3306/proyectoyeadb?useSSL=false&serverTimezone=Europe/Madrid
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.MySQLDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  thymeleaf:
+    cache: false
+    prefix: classpath:/templates/
+    suffix: .html
+
+app:
+  jwt:
+    secret: MiClaveSecretaSuperSeguraParaJWTProyectoRetoYEA2025
+    expiration-ms: 86400000
+
+logging:
+  level:
+    com.mikeldi.reto: DEBUG
+    org.springframework.security: DEBUG
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true

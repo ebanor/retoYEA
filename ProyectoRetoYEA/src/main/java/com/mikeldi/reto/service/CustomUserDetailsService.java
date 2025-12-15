@@ -1,4 +1,4 @@
-package com.mikeldi.reto.security;
+package com.mikeldi.reto.service;
 
 import com.mikeldi.reto.entity.Usuario;
 import com.mikeldi.reto.repository.UsuarioRepository;
@@ -11,10 +11,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
-    
+
     @Autowired
     private UsuarioRepository usuarioRepository;
-    
+
     @Override
     @Transactional
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {

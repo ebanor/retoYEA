@@ -52,4 +52,54 @@ public class WebController {
     public String editarProducto() {
         return "productos/editar";
     }
+    
+    @GetMapping("/pedidos")
+    public String pedidos() {
+        return "pedidos/lista";
+    }
+
+    @GetMapping("/pedidos/crear")
+    public String crearPedido() {
+        return "pedidos/crear";
+    }
+
+    @GetMapping("/pedidos/ver")
+    public String verPedido() {
+        return "pedidos/ver";
+    }
+
+    @GetMapping("/facturas")
+    public String facturas() {
+        return "facturas/lista";
+    }
+
+    @GetMapping("/facturas/emitir")
+    public String emitirFactura() {
+        return "facturas/emitir";
+    }
+
+    @GetMapping("/facturas/ver")
+    public String verFactura() {
+        return "facturas/ver";
+    }
+
+    @GetMapping("/stock")
+    public String stock() {
+        return "stock/movimientos";
+    }
+
+    @GetMapping("/stock/registrar")
+    public String registrarMovimiento() {
+        return "stock/registrar";
+    }
+
+    @GetMapping("/reportes")
+    public String reportes() {
+        return "reportes/index";
+    }
+    
+    @GetMapping("/usuarios")
+    public String usuarios() {
+        return "usuarios/lista";
+    }
 }

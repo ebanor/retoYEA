@@ -39,32 +39,41 @@ public class AuthController {
         description = "Autentica un usuario con email y contraseña, retorna un token JWT"
     )
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
-        // Autenticar usuario
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        loginRequest.getEmail(),
-                        loginRequest.getPassword()
-                )
-        );
-        
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        
-        // Generar token JWT
-        String jwt = jwtUtil.generateJwtToken(authentication);
-        
-        // Obtener detalles del usuario
-        Usuario usuario = (Usuario) authentication.getPrincipal();
-        
-        // Crear respuesta
-        LoginResponse response = new LoginResponse(
-                jwt,
-                usuario.getId(),
-                usuario.getNombre(),
-                usuario.getEmail(),
-                usuario.getRoles()
-        );
-        
-        return ResponseEntity.ok(response);
+        try {
+            // Autenticar usuario
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            loginRequest.getEmail(),
+                            loginRequest.getPassword()
+                    )
+            );
+            
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            
+            // Generar token JWT
+            String jwt = jwtUtil.generateJwtToken(authentication);
+            
+            // Obtener detalles del usuario
+            Usuario usuario = (Usuario) authentication.getPrincipal();
+            
+            // Extraer el primer rol
+            String rolPrincipal = "";
+            if (usuario.getRoles() != null && !usuario.getRoles().isEmpty()) {
+                rolPrincipal = usuario.getRoles().iterator().next().toString();
+            }
+            
+            // Crear respuesta
+            LoginResponse response = new LoginResponse();
+            response.setToken(jwt);
+            response.setId(usuario.getId());
+            response.setNombre(usuario.getNombre());
+            response.setEmail(usuario.getEmail());
+            response.setRol(rolPrincipal); // Solo pasar el rol principal
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
     }
     
     @PostMapping("/register")

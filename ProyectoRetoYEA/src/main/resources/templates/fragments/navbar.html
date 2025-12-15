@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+    <!-- FRAGMENTO: Navbar con roles -->
+    <nav th:fragment="navbar(activePage)" class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/web/dashboard">
+                <i class="bi bi-building"></i> ProyectoRetoYEA
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <!-- Dashboard - todos los roles -->
+                    <li class="nav-item">
+                        <a class="nav-link" th:classappend="${activePage == 'dashboard'} ? 'active' : ''" href="/web/dashboard">
+                            <i class="bi bi-speedometer2"></i> Dashboard
+                        </a>
+                    </li>
+                    <!-- Clientes - ADMIN y COMERCIAL -->
+                    <li class="nav-item" data-roles="ADMIN,COMERCIAL">
+                        <a class="nav-link" th:classappend="${activePage == 'clientes'} ? 'active' : ''" href="/web/clientes">
+                            <i class="bi bi-people"></i> Clientes
+                        </a>
+                    </li>
+                    <!-- Productos - todos -->
+                    <li class="nav-item">
+                        <a class="nav-link" th:classappend="${activePage == 'productos'} ? 'active' : ''" href="/web/productos">
+                            <i class="bi bi-box"></i> Productos
+                        </a>
+                    </li>
+                    <!-- Pedidos - ADMIN y COMERCIAL -->
+                    <li class="nav-item" data-roles="ADMIN,COMERCIAL">
+                        <a class="nav-link" th:classappend="${activePage == 'pedidos'} ? 'active' : ''" href="/web/pedidos">
+                            <i class="bi bi-cart"></i> Pedidos
+                        </a>
+                    </li>
+                    <!-- Facturas - ADMIN y COMERCIAL -->
+                    <li class="nav-item" data-roles="ADMIN,COMERCIAL">
+                        <a class="nav-link" th:classappend="${activePage == 'facturas'} ? 'active' : ''" href="/web/facturas">
+                            <i class="bi bi-receipt"></i> Facturas
+                        </a>
+                    </li>
+                    <!-- Stock - ADMIN y ALMACEN -->
+                    <li class="nav-item" data-roles="ADMIN,ALMACEN">
+                        <a class="nav-link" th:classappend="${activePage == 'stock'} ? 'active' : ''" href="/web/stock">
+                            <i class="bi bi-box-seam"></i> Stock
+                        </a>
+                    </li>
+                    <!-- Reportes - ADMIN y COMERCIAL -->
+                    <li class="nav-item" data-roles="ADMIN,COMERCIAL">
+                        <a class="nav-link" th:classappend="${activePage == 'reportes'} ? 'active' : ''" href="/web/reportes">
+                            <i class="bi bi-bar-chart"></i> Reportes
+                        </a>
+                    </li>
+                    <!-- Usuarios - ADMIN solo -->
+                    <li class="nav-item" data-roles="ADMIN">
+                        <a class="nav-link" th:classappend="${activePage == 'usuarios'} ? 'active' : ''" href="/web/usuarios">
+                            <i class="bi bi-people-fill"></i> Usuarios
+                        </a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle"></i> <span id="userName">Usuario</span> (<span id="userRol"></span>)
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#" id="logoutBtn">
+                                <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+                            </a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- FRAGMENTO: Script de filtrado por rol -->
+    <script th:fragment="navbar-script">
+        document.addEventListener('DOMContentLoaded', function() {
+            const token = localStorage.getItem('jwt_token');
+            const userName = localStorage.getItem('user_name');
+            const userRol = localStorage.getItem('user_rol');
+            
+            if (!token) {
+                window.location.href = '/web/login';
+                return;
+            }
+            
+            // Mostrar nombre y rol en navbar
+            const userNameEl = document.getElementById('userName');
+            const userRolEl = document.getElementById('userRol');
+            
+            if (userNameEl) {
+                userNameEl.textContent = userName || 'Usuario';
+            }
+            if (userRolEl) {
+                userRolEl.textContent = userRol || 'ROL';
+            }
+            
+            // Filtrar elementos del menú por rol
+            const menuItems = document.querySelectorAll('.navbar .nav-item[data-roles]');
+            menuItems.forEach(item => {
+                const rolesPermitidos = item.getAttribute('data-roles').split(',');
+                if (!rolesPermitidos.includes(userRol)) {
+                    item.style.display = 'none';
+                }
+            });
+            
+            // Logout
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    localStorage.clear();
+                    window.location.href = '/web/login';
+                });
+            }
+        });
+    </script>
+</body>
+</html>

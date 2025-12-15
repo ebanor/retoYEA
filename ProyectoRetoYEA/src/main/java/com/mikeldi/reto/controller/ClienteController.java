@@ -1,7 +1,9 @@
 package com.mikeldi.reto.controller;
 
+import com.itextpdf.text.DocumentException;
 import com.mikeldi.reto.dto.ClienteDTO;
 import com.mikeldi.reto.service.ClienteService;
+import com.mikeldi.reto.service.ExportService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -12,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -23,6 +26,9 @@ public class ClienteController {
     @Autowired
     private ClienteService clienteService;
     
+    @Autowired
+    private ExportService exportService;
+    
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'COMERCIAL')")
     @Operation(
@@ -33,7 +39,6 @@ public class ClienteController {
             @RequestParam(required = false) String buscar) {
         
         if (buscar != null && !buscar.isEmpty()) {
-            // Buscar por nombre
             List<ClienteDTO> clientes = clienteService.buscarPorNombre(buscar);
             return ResponseEntity.ok(clientes);
         }
@@ -121,5 +126,33 @@ public class ClienteController {
             @RequestParam boolean activo) {
         ClienteDTO cliente = clienteService.cambiarEstado(id, activo);
         return ResponseEntity.ok(cliente);
+    }
+    
+    // ============== EXPORTACIÓN ==============
+    
+    @GetMapping("/export/pdf")
+    @PreAuthorize("hasAnyRole('ADMIN', 'COMERCIAL')")
+    @Operation(summary = "Exportar clientes a PDF")
+    public ResponseEntity<byte[]> exportarClientesPDF() throws DocumentException {
+        List<ClienteDTO> clientes = clienteService.listarTodos();
+        byte[] pdfBytes = exportService.exportarClientesPDF(clientes);
+        
+        return ResponseEntity.ok()
+                .header("Content-Type", "application/pdf")
+                .header("Content-Disposition", "attachment; filename=clientes.pdf")
+                .body(pdfBytes);
+    }
+    
+    @GetMapping("/export/csv")
+    @PreAuthorize("hasAnyRole('ADMIN', 'COMERCIAL')")
+    @Operation(summary = "Exportar clientes a CSV")
+    public ResponseEntity<String> exportarClientesCSV() throws IOException {
+        List<ClienteDTO> clientes = clienteService.listarTodos();
+        String csv = exportService.exportarClientesCSV(clientes);
+        
+        return ResponseEntity.ok()
+                .header("Content-Type", "text/csv; charset=utf-8")
+                .header("Content-Disposition", "attachment; filename=clientes.csv")
+                .body(csv);
     }
 }

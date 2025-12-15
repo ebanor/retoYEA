@@ -51,6 +51,38 @@ public class UsuarioService {
         return convertirADTO(usuarioGuardado);
     }
     
+    @Transactional
+    public UsuarioDTO crearNuevoUsuario(UsuarioDTO usuarioDTO) {
+        // Validar que el email no exista
+        if (usuarioRepository.existsByEmail(usuarioDTO.getEmail())) {
+            throw new BadRequestException("El email ya está registrado");
+        }
+        
+        // Validar que se proporcione contraseña
+        if (usuarioDTO.getPassword() == null || usuarioDTO.getPassword().isEmpty()) {
+            throw new BadRequestException("La contraseña es obligatoria para crear nuevos usuarios");
+        }
+        
+        // Crear usuario
+        Usuario usuario = new Usuario();
+        usuario.setNombre(usuarioDTO.getNombre());
+        usuario.setEmail(usuarioDTO.getEmail());
+        usuario.setPassword(passwordEncoder.encode(usuarioDTO.getPassword()));
+        
+        // Asignar roles
+        if (usuarioDTO.getRoles() != null && !usuarioDTO.getRoles().isEmpty()) {
+            usuario.setRoles(usuarioDTO.getRoles());
+        } else {
+            usuario.setRoles(List.of(Role.COMERCIAL));
+        }
+        
+        usuario.setActivo(usuarioDTO.getActivo() != null ? usuarioDTO.getActivo() : true);
+        
+        Usuario usuarioGuardado = usuarioRepository.save(usuario);
+        
+        return convertirADTO(usuarioGuardado);
+    }
+    
     @Transactional(readOnly = true)
     public List<UsuarioDTO> listarTodos() {
         return usuarioRepository.findAll().stream()
@@ -78,20 +110,26 @@ public class UsuarioService {
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario", "id", id));
         
         // Actualizar nombre
-        if (usuarioDTO.getNombre() != null) {
+        if (usuarioDTO.getNombre() != null && !usuarioDTO.getNombre().isEmpty()) {
             usuario.setNombre(usuarioDTO.getNombre());
         }
         
         // Validar y actualizar email
-        if (usuarioDTO.getEmail() != null && !usuarioDTO.getEmail().equals(usuario.getEmail())) {
+        if (usuarioDTO.getEmail() != null && !usuarioDTO.getEmail().isEmpty() && 
+            !usuarioDTO.getEmail().equals(usuario.getEmail())) {
             if (usuarioRepository.existsByEmail(usuarioDTO.getEmail())) {
                 throw new BadRequestException("El email ya está registrado");
             }
             usuario.setEmail(usuarioDTO.getEmail());
         }
         
+        // Actualizar contraseña SOLO si se proporciona y no está vacía
+        if (usuarioDTO.getPassword() != null && !usuarioDTO.getPassword().isEmpty()) {
+            usuario.setPassword(passwordEncoder.encode(usuarioDTO.getPassword()));
+        }
+        
         // Actualizar roles
-        if (usuarioDTO.getRoles() != null) {
+        if (usuarioDTO.getRoles() != null && !usuarioDTO.getRoles().isEmpty()) {
             usuario.setRoles(usuarioDTO.getRoles());
         }
         
@@ -119,6 +157,17 @@ public class UsuarioService {
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario", "id", id));
         
         usuario.setActivo(activo);
+        Usuario usuarioActualizado = usuarioRepository.save(usuario);
+        
+        return convertirADTO(usuarioActualizado);
+    }
+    
+    @Transactional
+    public UsuarioDTO cambiarRol(Long id, List<Role> roles) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario", "id", id));
+        
+        usuario.setRoles(roles);
         Usuario usuarioActualizado = usuarioRepository.save(usuario);
         
         return convertirADTO(usuarioActualizado);

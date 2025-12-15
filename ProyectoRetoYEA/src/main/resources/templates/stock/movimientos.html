@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movimientos de Stock - ProyectoRetoYEA</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+</head>
+<body>
+    <!-- NAVBAR FRAGMENT -->
+    <div th:replace="~{fragments/navbar :: navbar('stock')}"></div>
+    
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="bi bi-box-seam"></i> Movimientos de Stock</h1>
+            <a href="/web/stock/registrar" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Registrar Movimiento
+            </a>
+        </div>
+        
+        <!-- Filtros -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <label class="form-label">Filtrar por Producto</label>
+                <select class="form-select" id="productoSelect">
+                    <option value="">Todos los productos</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">&nbsp;</label>
+                <button class="btn btn-outline-secondary w-100" id="limpiarBtn">
+                    <i class="bi bi-x-circle"></i> Limpiar Filtros
+                </button>
+            </div>
+        </div>
+        
+        <!-- Tabla -->
+        <div class="card">
+            <div class="card-body">
+                <div id="loadingSpinner" class="text-center py-5">
+                    <div class="spinner-border text-primary"></div>
+                </div>
+                
+                <div id="tablaMovimientos" class="d-none">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Producto</th>
+                                    <th>Tipo</th>
+                                    <th>Cantidad</th>
+                                    <th>Stock Anterior</th>
+                                    <th>Stock Nuevo</th>
+                                    <th>Usuario</th>
+                                    <th>Motivo</th>
+                                </tr>
+                            </thead>
+                            <tbody id="movimientosBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- NAVBAR SCRIPT FRAGMENT -->
+    <script th:replace="~{fragments/navbar :: navbar-script}"></script>
+    
+    <script>
+        const token = localStorage.getItem('jwt_token');
+        
+        async function cargarProductos() {
+            try {
+                const response = await fetch('/api/productos', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const productos = await response.json();
+                
+                const select = document.getElementById('productoSelect');
+                productos.forEach(producto => {
+                    const option = document.createElement('option');
+                    option.value = producto.id;
+                    option.textContent = producto.nombre;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al cargar productos');
+            }
+        }
+        
+        async function cargarMovimientos(productoId = null) {
+            const url = productoId 
+                ? `/api/stock/movimientos/producto/${productoId}`
+                : '/api/stock/movimientos';
+            
+            try {
+                const response = await fetch(url, {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const movimientos = await response.json();
+                mostrarMovimientos(movimientos);
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al cargar movimientos');
+            }
+        }
+        
+        function mostrarMovimientos(movimientos) {
+            document.getElementById('loadingSpinner').classList.add('d-none');
+            document.getElementById('tablaMovimientos').classList.remove('d-none');
+            
+            const tbody = document.getElementById('movimientosBody');
+            tbody.innerHTML = '';
+            
+            movimientos.forEach(mov => {
+                const tipoClass = {
+                    'ENTRADA': 'success',
+                    'SALIDA': 'danger',
+                    'AJUSTE': 'warning',
+                    'VENTA': 'info'
+                }[mov.tipo] || 'secondary';
+                
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${new Date(mov.fechaMovimiento).toLocaleString()}</td>
+                    <td>${mov.productoNombre}</td>
+                    <td><span class="badge bg-${tipoClass}">${mov.tipo}</span></td>
+                    <td>${mov.cantidad}</td>
+                    <td>${mov.stockAnterior}</td>
+                    <td><strong>${mov.stockNuevo}</strong></td>
+                    <td>${mov.usuarioNombre || '-'}</td>
+                    <td>${mov.motivo || '-'}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        
+        document.getElementById('productoSelect').addEventListener('change', (e) => {
+            const productoId = e.target.value;
+            cargarMovimientos(productoId || null);
+        });
+        
+        document.getElementById('limpiarBtn').addEventListener('click', () => {
+            document.getElementById('productoSelect').value = '';
+            cargarMovimientos();
+        });
+        
+        cargarProductos();
+        cargarMovimientos();
+    </script>
+</body>
+</html>

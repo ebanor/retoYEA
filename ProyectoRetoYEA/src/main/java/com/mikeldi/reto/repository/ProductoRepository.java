@@ -23,4 +23,6 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
     
     @Query("SELECT DISTINCT p.categoria FROM Producto p WHERE p.categoria IS NOT NULL ORDER BY p.categoria")
     List<String> findAllCategorias();
+    
+    List<Producto> findByStockActualLessThanAndActivoTrue(Integer stockMinimo);
 }

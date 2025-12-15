@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crear Pedido - ProyectoRetoYEA</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+</head>
+<body>
+    <!-- NAVBAR FRAGMENT -->
+    <div th:replace="~{fragments/navbar :: navbar('pedidos')}"></div>
+    
+    <!-- Contenido -->
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="bi bi-cart-plus"></i> Crear Pedido</h1>
+            <a href="/web/pedidos" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Volver
+            </a>
+        </div>
+        
+        <div class="row">
+            <!-- Formulario -->
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Datos del Pedido</h5>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Cliente *</label>
+                            <select class="form-select" id="clienteSelect" required>
+                                <option value="">Seleccionar cliente...</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Observaciones</label>
+                            <textarea class="form-control" id="observaciones" rows="3"></textarea>
+                        </div>
+                        
+                        <hr>
+                        
+                        <h5 class="card-title">Añadir Productos</h5>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-5">
+                                <label class="form-label">Producto</label>
+                                <select class="form-select" id="productoSelect">
+                                    <option value="">Seleccionar producto...</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Cantidad</label>
+                                <input type="number" class="form-control" id="cantidad" min="1" value="1">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Precio</label>
+                                <input type="number" class="form-control" id="precioUnitario" step="0.01" readonly>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">&nbsp;</label>
+                                <button type="button" class="btn btn-success w-100" id="addProductoBtn">
+                                    <i class="bi bi-plus-circle"></i> Añadir
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Producto</th>
+                                        <th>Cantidad</th>
+                                        <th>Precio</th>
+                                        <th>IVA</th>
+                                        <th>Subtotal</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="lineasBody">
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted">
+                                            No hay productos añadidos
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Resumen -->
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Resumen</h5>
+                        
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Base imponible:</span>
+                            <strong id="totalBase">0,00 €</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>IVA:</span>
+                            <strong id="totalIva">0,00 €</strong>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between mb-3">
+                            <h5>Total:</h5>
+                            <h5 id="totalFinal">0,00 €</h5>
+                        </div>
+                        
+                        <button type="button" class="btn btn-primary w-100" id="guardarBtn" disabled>
+                            <i class="bi bi-save"></i> Crear Pedido
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- NAVBAR SCRIPT FRAGMENT -->
+    <script th:replace="~{fragments/navbar :: navbar-script}"></script>
+    
+    <script>
+        const token = localStorage.getItem('jwt_token');
+        
+        let clientes = [];
+        let productos = [];
+        let lineas = [];
+        
+        // Cargar clientes
+        async function cargarClientes() {
+            try {
+                const response = await fetch('/api/clientes', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                clientes = await response.json();
+                
+                const select = document.getElementById('clienteSelect');
+                clientes.forEach(cliente => {
+                    const option = document.createElement('option');
+                    option.value = cliente.id;
+                    option.textContent = cliente.nombre;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al cargar clientes');
+            }
+        }
+        
+        // Cargar productos
+        async function cargarProductos() {
+            try {
+                const response = await fetch('/api/productos', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                productos = await response.json();
+                
+                const select = document.getElementById('productoSelect');
+                productos.forEach(producto => {
+                    const option = document.createElement('option');
+                    option.value = producto.id;
+                    option.textContent = `${producto.nombre} (Stock: ${producto.stockActual})`;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al cargar productos');
+            }
+        }
+        
+        // Cuando se selecciona un producto
+        document.getElementById('productoSelect').addEventListener('change', (e) => {
+            const productoId = e.target.value;
+            if (productoId) {
+                const producto = productos.find(p => p.id == productoId);
+                document.getElementById('precioUnitario').value = producto.precio;
+            }
+        });
+        
+        // Añadir producto a la línea
+        document.getElementById('addProductoBtn').addEventListener('click', () => {
+            const productoId = document.getElementById('productoSelect').value;
+            const cantidad = parseInt(document.getElementById('cantidad').value);
+            const precioUnitario = parseFloat(document.getElementById('precioUnitario').value);
+            
+            if (!productoId || cantidad < 1) {
+                alert('Selecciona un producto y cantidad válida');
+                return;
+            }
+            
+            const producto = productos.find(p => p.id == productoId);
+            
+            lineas.push({
+                productoId: producto.id,
+                productoNombre: producto.nombre,
+                cantidad: cantidad,
+                precioUnitario: precioUnitario,
+                iva: producto.iva
+            });
+            
+            actualizarTabla();
+            calcularTotales();
+            
+            // Resetear formulario de producto
+            document.getElementById('productoSelect').value = '';
+            document.getElementById('cantidad').value = 1;
+            document.getElementById('precioUnitario').value = '';
+        });
+        
+        function actualizarTabla() {
+            const tbody = document.getElementById('lineasBody');
+            tbody.innerHTML = '';
+            
+            if (lineas.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No hay productos añadidos</td></tr>';
+                document.getElementById('guardarBtn').disabled = true;
+                return;
+            }
+            
+            lineas.forEach((linea, index) => {
+                const subtotal = linea.cantidad * linea.precioUnitario;
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${linea.productoNombre}</td>
+                    <td>${linea.cantidad}</td>
+                    <td>${linea.precioUnitario.toFixed(2)} €</td>
+                    <td>${linea.iva}%</td>
+                    <td>${subtotal.toFixed(2)} €</td>
+                    <td>
+                        <button class="btn btn-sm btn-danger" onclick="eliminarLinea(${index})">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            
+            document.getElementById('guardarBtn').disabled = false;
+        }
+        
+        function eliminarLinea(index) {
+            lineas.splice(index, 1);
+            actualizarTabla();
+            calcularTotales();
+        }
+        
+        function calcularTotales() {
+            let totalBase = 0;
+            let totalIva = 0;
+            
+            lineas.forEach(linea => {
+                const subtotal = linea.cantidad * linea.precioUnitario;
+                totalBase += subtotal;
+                totalIva += subtotal * (linea.iva / 100);
+            });
+            
+            const totalFinal = totalBase + totalIva;
+            
+            document.getElementById('totalBase').textContent = totalBase.toFixed(2) + ' €';
+            document.getElementById('totalIva').textContent = totalIva.toFixed(2) + ' €';
+            document.getElementById('totalFinal').textContent = totalFinal.toFixed(2) + ' €';
+        }
+        
+        // Guardar pedido
+        document.getElementById('guardarBtn').addEventListener('click', async () => {
+            const clienteId = document.getElementById('clienteSelect').value;
+            const observaciones = document.getElementById('observaciones').value;
+            
+            if (!clienteId) {
+                alert('Selecciona un cliente');
+                return;
+            }
+            
+            if (lineas.length === 0) {
+                alert('Añade al menos un producto');
+                return;
+            }
+            
+            const pedido = {
+                clienteId: parseInt(clienteId),
+                observaciones: observaciones,
+                lineas: lineas
+            };
+            
+            try {
+                const response = await fetch('/api/pedidos', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(pedido)
+                });
+                
+                if (response.ok) {
+                    alert('Pedido creado correctamente');
+                    window.location.href = '/web/pedidos';
+                } else {
+                    const error = await response.text();
+                    alert('Error: ' + error);
+                }
+            } catch (error) {
+                alert('Error al crear el pedido');
+                console.error(error);
+            }
+        });
+        
+        cargarClientes();
+        cargarProductos();
+    </script>
+</body>
+</html>

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emitir Factura - ProyectoRetoYEA</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+</head>
+<body>
+    <!-- NAVBAR FRAGMENT -->
+    <div th:replace="~{fragments/navbar :: navbar('facturas')}"></div>
+    
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="bi bi-receipt-cutoff"></i> Emitir Factura</h1>
+            <a href="/web/facturas" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Volver</a>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Seleccionar Pedido</h5>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Pedido PAGADO *</label>
+                            <select class="form-select" id="pedidoSelect" required>
+                                <option value="">Seleccionar pedido...</option>
+                            </select>
+                            <div class="form-text">Solo aparecen pedidos en estado PAGADO</div>
+                        </div>
+                        
+                        <div id="detallePedido" class="d-none">
+                            <hr>
+                            <h6>Detalle del Pedido</h6>
+                            <div class="row">
+                                <div class="col-md-6 mb-2">
+                                    <strong>Cliente:</strong> <span id="clienteNombre"></span>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <strong>Fecha:</strong> <span id="fechaPedido"></span>
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <strong>Base:</strong> <span id="totalBase"></span> €
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <strong>IVA:</strong> <span id="totalIva"></span> €
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <strong>Total:</strong> <span id="totalFinal"></span> €
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Observaciones</label>
+                            <textarea class="form-control" id="observaciones" rows="3"></textarea>
+                        </div>
+                        
+                        <button type="button" class="btn btn-primary w-100" id="emitirBtn" disabled>
+                            <i class="bi bi-check-circle"></i> Emitir Factura y Descontar Stock
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="alert alert-info">
+                    <h6 class="alert-heading"><i class="bi bi-info-circle"></i> Información</h6>
+                    <p>Al emitir la factura:</p>
+                    <ul class="mb-0">
+                        <li>Se generará un número de factura automático</li>
+                        <li>Se descontará el stock de todos los productos</li>
+                        <li>Se registrarán movimientos de stock</li>
+                        <li>La fecha de vencimiento será 30 días después</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- NAVBAR SCRIPT FRAGMENT -->
+    <script th:replace="~{fragments/navbar :: navbar-script}"></script>
+    
+    <script>
+        const token = localStorage.getItem('jwt_token');
+        
+        let pedidoSeleccionado = null;
+        
+        async function cargarPedidosPagados() {
+            try {
+                const response = await fetch('/api/pedidos?estado=PAGADO', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const pedidos = await response.json();
+                
+                const select = document.getElementById('pedidoSelect');
+                pedidos.forEach(pedido => {
+                    const option = document.createElement('option');
+                    option.value = pedido.id;
+                    option.textContent = `Pedido #${pedido.id} - ${pedido.clienteNombre} - ${pedido.totalFinal.toFixed(2)} €`;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al cargar pedidos');
+            }
+        }
+        
+        document.getElementById('pedidoSelect').addEventListener('change', async (e) => {
+            const pedidoId = e.target.value;
+            if (!pedidoId) {
+                document.getElementById('detallePedido').classList.add('d-none');
+                document.getElementById('emitirBtn').disabled = true;
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/pedidos/${pedidoId}`, {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                pedidoSeleccionado = await response.json();
+                
+                document.getElementById('clienteNombre').textContent = pedidoSeleccionado.clienteNombre;
+                document.getElementById('fechaPedido').textContent = new Date(pedidoSeleccionado.fechaPedido).toLocaleDateString();
+                document.getElementById('totalBase').textContent = pedidoSeleccionado.totalBase.toFixed(2);
+                document.getElementById('totalIva').textContent = pedidoSeleccionado.totalIva.toFixed(2);
+                document.getElementById('totalFinal').textContent = pedidoSeleccionado.totalFinal.toFixed(2);
+                
+                document.getElementById('detallePedido').classList.remove('d-none');
+                document.getElementById('emitirBtn').disabled = false;
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al cargar el pedido');
+            }
+        });
+        
+        document.getElementById('emitirBtn').addEventListener('click', async () => {
+            if (!pedidoSeleccionado) return;
+            
+            if (!confirm('¿Confirmar emisión de factura? Se descontará el stock de los productos.')) {
+                return;
+            }
+            
+            const facturaData = {
+                pedidoId: pedidoSeleccionado.id,
+                observaciones: document.getElementById('observaciones').value
+            };
+            
+            try {
+                const response = await fetch('/api/facturas', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(facturaData)
+                });
+                
+                if (response.ok) {
+                    const factura = await response.json();
+                    alert(`Factura ${factura.numeroFactura} emitida correctamente`);
+                    window.location.href = '/web/facturas';
+                } else {
+                    const error = await response.text();
+                    alert('Error: ' + error);
+                }
+            } catch (error) {
+                alert('Error al emitir la factura');
+                console.error(error);
+            }
+        });
+        
+        cargarPedidosPagados();
+    </script>
+</body>
+</html>

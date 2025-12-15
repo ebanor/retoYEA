@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalle Pedido - ProyectoRetoYEA</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+</head>
+<body>
+    <!-- NAVBAR FRAGMENT -->
+    <div th:replace="~{fragments/navbar :: navbar('pedidos')}"></div>
+    
+    <!-- Contenido -->
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="bi bi-cart"></i> Detalle del Pedido #<span id="pedidoId"></span></h1>
+            <a href="/web/pedidos" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Volver
+            </a>
+        </div>
+        
+        <div class="row">
+            <!-- Información del pedido -->
+            <div class="col-md-8">
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title">Información General</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="text-muted">Cliente:</label>
+                                <p id="clienteNombre"></p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="text-muted">Fecha:</label>
+                                <p id="fechaPedido"></p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="text-muted">Estado:</label>
+                                <p id="estadoPedido"></p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="text-muted">Usuario:</label>
+                                <p id="usuarioNombre"></p>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label class="text-muted">Observaciones:</label>
+                                <p id="observaciones"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Líneas del Pedido</h5>
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Producto</th>
+                                        <th>Cantidad</th>
+                                        <th>Precio Unit.</th>
+                                        <th>IVA</th>
+                                        <th>Subtotal</th>
+                                        <th>Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="lineasBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Resumen y acciones -->
+            <div class="col-md-4">
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title">Resumen</h5>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Base imponible:</span>
+                            <strong id="totalBase"></strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>IVA:</span>
+                            <strong id="totalIva"></strong>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between">
+                            <h5>Total:</h5>
+                            <h5 id="totalFinal"></h5>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Cambiar Estado</h5>
+                        <select class="form-select mb-3" id="estadoSelect">
+                            <option value="PENDIENTE">Pendiente</option>
+                            <option value="PAGADO">Pagado</option>
+                            <option value="ENVIADO">Enviado</option>
+                            <option value="CANCELADO">Cancelado</option>
+                        </select>
+                        <button class="btn btn-primary w-100" id="cambiarEstadoBtn">
+                            <i class="bi bi-arrow-repeat"></i> Actualizar Estado
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- NAVBAR SCRIPT FRAGMENT -->
+    <script th:replace="~{fragments/navbar :: navbar-script}"></script>
+    
+    <script>
+        const token = localStorage.getItem('jwt_token');
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const pedidoId = urlParams.get('id');
+        
+        if (!pedidoId) {
+            alert('ID de pedido no especificado');
+            window.location.href = '/web/pedidos';
+        }
+        
+        async function cargarPedido() {
+            try {
+                const response = await fetch(`/api/pedidos/${pedidoId}`, {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Pedido no encontrado');
+                }
+                
+                const pedido = await response.json();
+                mostrarPedido(pedido);
+            } catch (error) {
+                alert('Error al cargar el pedido');
+                window.location.href = '/web/pedidos';
+            }
+        }
+        
+        function mostrarPedido(pedido) {
+            document.getElementById('pedidoId').textContent = pedido.id;
+            document.getElementById('clienteNombre').textContent = pedido.clienteNombre;
+            document.getElementById('fechaPedido').textContent = new Date(pedido.fechaPedido).toLocaleString();
+            document.getElementById('usuarioNombre').textContent = pedido.usuarioNombre;
+            document.getElementById('observaciones').textContent = pedido.observaciones || 'Sin observaciones';
+            
+            const estadoClass = {
+                'PENDIENTE': 'warning',
+                'PAGADO': 'success',
+                'ENVIADO': 'info',
+                'CANCELADO': 'danger'
+            }[pedido.estado] || 'secondary';
+            
+            document.getElementById('estadoPedido').innerHTML = 
+                `<span class="badge bg-${estadoClass}">${pedido.estado}</span>`;
+            
+            document.getElementById('estadoSelect').value = pedido.estado;
+            
+            // Líneas
+            const tbody = document.getElementById('lineasBody');
+            tbody.innerHTML = '';
+            
+            pedido.lineas.forEach(linea => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${linea.productoNombre}</td>
+                    <td>${linea.cantidad}</td>
+                    <td>${linea.precioUnitario.toFixed(2)} €</td>
+                    <td>${linea.iva}%</td>
+                    <td>${linea.subtotal.toFixed(2)} €</td>
+                    <td>${linea.total.toFixed(2)} €</td>
+                `;
+                tbody.appendChild(tr);
+            });
+            
+            // Totales
+            document.getElementById('totalBase').textContent = pedido.totalBase.toFixed(2) + ' €';
+            document.getElementById('totalIva').textContent = pedido.totalIva.toFixed(2) + ' €';
+            document.getElementById('totalFinal').textContent = pedido.totalFinal.toFixed(2) + ' €';
+        }
+        
+        document.getElementById('cambiarEstadoBtn').addEventListener('click', async () => {
+            const nuevoEstado = document.getElementById('estadoSelect').value;
+            
+            try {
+                const response = await fetch(`/api/pedidos/${pedidoId}/estado?estado=${nuevoEstado}`, {
+                    method: 'PATCH',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                
+                if (response.ok) {
+                    alert('Estado actualizado correctamente');
+                    cargarPedido();
+                } else {
+                    alert('Error al actualizar el estado');
+                }
+            } catch (error) {
+                alert('Error al actualizar el estado');
+            }
+        });
+        
+        cargarPedido();
+    </script>
+</body>
+</html>

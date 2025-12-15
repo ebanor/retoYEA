@@ -1,5 +1,6 @@
 package com.mikeldi.reto.dto;
 
+import com.fasterxml.jackson.annotation.JsonSetter;
 import com.mikeldi.reto.entity.Role;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -7,6 +8,7 @@ import jakarta.validation.constraints.Size;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class UsuarioDTO {
     
@@ -19,6 +21,8 @@ public class UsuarioDTO {
     @NotBlank(message = "El email es obligatorio")
     @Email(message = "Email inválido")
     private String email;
+    
+    private String password;
     
     private List<Role> roles;
     private Boolean activo;
@@ -34,6 +38,13 @@ public class UsuarioDTO {
         this.roles = roles;
         this.activo = activo;
         this.fechaCreacion = fechaCreacion;
+    }
+    
+    public UsuarioDTO(String nombre, String email, String password, List<Role> roles) {
+        this.nombre = nombre;
+        this.email = email;
+        this.password = password;
+        this.roles = roles;
     }
     
     // Getters y Setters
@@ -61,12 +72,40 @@ public class UsuarioDTO {
         this.email = email;
     }
     
+    public String getPassword() {
+        return password;
+    }
+    
+    public void setPassword(String password) {
+        this.password = password;
+    }
+    
     public List<Role> getRoles() {
         return roles;
     }
     
     public void setRoles(List<Role> roles) {
         this.roles = roles;
+    }
+    
+    // NUEVO: Método especial para Jackson que convierte strings a Role
+    @JsonSetter("roles")
+    public void setRolesFromJson(Object rolesObj) {
+        if (rolesObj instanceof List<?>) {
+            List<?> rolesList = (List<?>) rolesObj;
+            if (!rolesList.isEmpty()) {
+                Object first = rolesList.get(0);
+                if (first instanceof String) {
+                    // Si son strings, convertir a Role
+                    this.roles = rolesList.stream()
+                            .map(obj -> Role.valueOf(((String) obj).toUpperCase()))
+                            .collect(Collectors.toList());
+                } else if (first instanceof Role) {
+                    // Si ya son Role, usar directamente
+                    this.roles = (List<Role>) rolesList;
+                }
+            }
+        }
     }
     
     public Boolean getActivo() {

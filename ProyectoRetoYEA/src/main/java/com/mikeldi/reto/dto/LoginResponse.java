@@ -1,18 +1,19 @@
 package com.mikeldi.reto.dto;
 
-import com.mikeldi.reto.entity.Role;
-import java.util.List;
+import java.util.Set;
 
 public class LoginResponse {
-    
     private String token;
-    private String tipo = "Bearer";
     private Long id;
     private String nombre;
     private String email;
-    private List<Role> roles;
+    private Set<?> roles;
+    private String rol;
     
-    public LoginResponse(String token, Long id, String nombre, String email, List<Role> roles) {
+    public LoginResponse() {
+    }
+    
+    public LoginResponse(String token, Long id, String nombre, String email, Set<?> roles) {
         this.token = token;
         this.id = id;
         this.nombre = nombre;
@@ -27,14 +28,6 @@ public class LoginResponse {
     
     public void setToken(String token) {
         this.token = token;
-    }
-    
-    public String getTipo() {
-        return tipo;
-    }
-    
-    public void setTipo(String tipo) {
-        this.tipo = tipo;
     }
     
     public Long getId() {
@@ -61,11 +54,19 @@ public class LoginResponse {
         this.email = email;
     }
     
-    public List<Role> getRoles() {
+    public Set<?> getRoles() {
         return roles;
     }
     
-    public void setRoles(List<Role> roles) {
+    public void setRoles(Set<?> roles) {
         this.roles = roles;
+    }
+    
+    public String getRol() {
+        return rol;
+    }
+    
+    public void setRol(String rol) {
+        this.rol = rol;
     }
 }

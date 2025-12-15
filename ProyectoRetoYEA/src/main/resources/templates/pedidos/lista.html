@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pedidos - ProyectoRetoYEA</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+</head>
+<body>
+    <!-- NAVBAR FRAGMENT -->
+    <div th:replace="~{fragments/navbar :: navbar('pedidos')}"></div>
+    
+    <!-- Contenido -->
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="bi bi-cart"></i> Pedidos</h1>
+            <div>
+                <button class="btn btn-success me-2" id="exportarPdfBtn">
+                    <i class="bi bi-file-pdf"></i> Exportar PDF
+                </button>
+                <button class="btn btn-info me-2" id="exportarCsvBtn">
+                    <i class="bi bi-file-earmark-spreadsheet"></i> Exportar CSV
+                </button>
+                <a href="/web/pedidos/crear" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Nuevo Pedido
+                </a>
+            </div>
+        </div>
+        
+        <!-- Filtros -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <select class="form-select" id="estadoSelect">
+                    <option value="">Todos los estados</option>
+                    <option value="PENDIENTE">Pendiente</option>
+                    <option value="PAGADO">Pagado</option>
+                    <option value="ENVIADO">Enviado</option>
+                    <option value="CANCELADO">Cancelado</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button class="btn btn-outline-secondary w-100" id="limpiarBtn">
+                    <i class="bi bi-x-circle"></i> Limpiar Filtros
+                </button>
+            </div>
+        </div>
+        
+        <!-- Tabla -->
+        <div class="card">
+            <div class="card-body">
+                <div id="loadingSpinner" class="text-center py-5">
+                    <div class="spinner-border text-primary"></div>
+                </div>
+                
+                <div id="tablaPedidos" class="d-none">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Fecha</th>
+                                    <th>Cliente</th>
+                                    <th>Total</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pedidosBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- NAVBAR SCRIPT FRAGMENT -->
+    <script th:replace="~{fragments/navbar :: navbar-script}"></script>
+    
+    <script>
+        const token = localStorage.getItem('jwt_token');
+        
+        async function cargarPedidos(estado = '') {
+            const url = estado ? `/api/pedidos?estado=${estado}` : '/api/pedidos';
+            
+            try {
+                const response = await fetch(url, {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                
+                if (response.ok) {
+                    const pedidos = await response.json();
+                    mostrarPedidos(pedidos);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+        
+        function mostrarPedidos(pedidos) {
+            document.getElementById('loadingSpinner').classList.add('d-none');
+            document.getElementById('tablaPedidos').classList.remove('d-none');
+            
+            const tbody = document.getElementById('pedidosBody');
+            tbody.innerHTML = '';
+            
+            pedidos.forEach(pedido => {
+                const estadoClass = {
+                    'PENDIENTE': 'warning',
+                    'PAGADO': 'success',
+                    'ENVIADO': 'info',
+                    'CANCELADO': 'danger'
+                }[pedido.estado] || 'secondary';
+                
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${pedido.id}</td>
+                    <td>${new Date(pedido.fechaPedido).toLocaleDateString()}</td>
+                    <td>${pedido.clienteNombre}</td>
+                    <td>${pedido.totalFinal.toFixed(2)} €</td>
+                    <td><span class="badge bg-${estadoClass}">${pedido.estado}</span></td>
+                    <td>
+                        <a href="/web/pedidos/ver?id=${pedido.id}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        
+        // Exportar PDF
+        document.getElementById('exportarPdfBtn').addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/pedidos/export/pdf', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'pedidos.pdf';
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                } else {
+                    alert('Error al exportar PDF');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al exportar PDF');
+            }
+        });
+        
+        // Exportar CSV
+        document.getElementById('exportarCsvBtn').addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/pedidos/export/csv', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                
+                if (response.ok) {
+                    const csv = await response.text();
+                    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'pedidos.csv';
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                } else {
+                    alert('Error al exportar CSV');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al exportar CSV');
+            }
+        });
+        
+        document.getElementById('estadoSelect').addEventListener('change', (e) => {
+            cargarPedidos(e.target.value);
+        });
+        
+        document.getElementById('limpiarBtn').addEventListener('click', () => {
+            document.getElementById('estadoSelect').value = '';
+            cargarPedidos();
+        });
+        
+        cargarPedidos();
+    </script>
+</body>
+</html>
