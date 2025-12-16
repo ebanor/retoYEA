@@ -12,11 +12,14 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
+// Maneja excepciones globalmente para todos los controladores REST
 @RestControllerAdvice
 public class GlobalExceptionHandler {
     
+    // Captura excepciones de recursos no encontrados y retorna HTTP 404
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleResourceNotFoundException(ResourceNotFoundException ex) {
+        // Construye respuesta estructurada con información del error
         Map<String, Object> errorResponse = new HashMap<>();
         errorResponse.put("timestamp", LocalDateTime.now());
         errorResponse.put("status", HttpStatus.NOT_FOUND.value());
@@ -26,6 +29,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
     }
     
+    // Captura excepciones de peticiones inválidas y retorna HTTP 400
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<Map<String, Object>> handleBadRequestException(BadRequestException ex) {
         Map<String, Object> errorResponse = new HashMap<>();
@@ -37,19 +41,23 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
     
+    // Captura excepciones de credenciales incorrectas y retorna HTTP 401
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<Map<String, Object>> handleBadCredentialsException(BadCredentialsException ex) {
         Map<String, Object> errorResponse = new HashMap<>();
         errorResponse.put("timestamp", LocalDateTime.now());
         errorResponse.put("status", HttpStatus.UNAUTHORIZED.value());
         errorResponse.put("error", "Unauthorized");
+        // Mensaje genérico para no revelar si el email existe
         errorResponse.put("message", "Email o contraseña incorrectos");
         
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
     }
     
+    // Captura errores de validación de @Valid y retorna HTTP 400 con detalles por campo
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        // Extrae errores de validación campo por campo
         Map<String, String> errors = new HashMap<>();
         ex.getBindingResult().getAllErrors().forEach((error) -> {
             String fieldName = ((FieldError) error).getField();
@@ -57,6 +65,7 @@ public class GlobalExceptionHandler {
             errors.put(fieldName, errorMessage);
         });
         
+        // Construye respuesta con mapa de errores por campo
         Map<String, Object> errorResponse = new HashMap<>();
         errorResponse.put("timestamp", LocalDateTime.now());
         errorResponse.put("status", HttpStatus.BAD_REQUEST.value());
@@ -66,6 +75,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
     
+    // Captura cualquier excepción no manejada específicamente y retorna HTTP 500
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGeneralException(Exception ex) {
         Map<String, Object> errorResponse = new HashMap<>();
