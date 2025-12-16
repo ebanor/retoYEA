@@ -9,24 +9,36 @@ import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+// Marca esta clase como configuración de Spring
 @Configuration
 public class SwaggerConfig {
     
+    // Define la configuración de OpenAPI para la documentación interactiva
     @Bean
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
+                // Configura los componentes de seguridad para la API
                 .components(new Components()
+                        // Define el esquema de autenticación JWT
                         .addSecuritySchemes("bearerAuth",
                                 new SecurityScheme()
+                                        // Especifica que es autenticación HTTP
                                         .type(SecurityScheme.Type.HTTP)
+                                        // Define que usa el esquema Bearer
                                         .scheme("bearer")
+                                        // Indica que el formato es JWT
                                         .bearerFormat("JWT")
+                                        // Descripción que aparece en la interfaz de Swagger
                                         .description("Ingresa el token JWT en el formato: Bearer {token}")
                         )
                 )
+                // Configura la información general de la API
                 .info(new Info()
+                        // Título que aparece en la documentación
                         .title("ProyectoRetoYEA - API ERP")
+                        // Versión actual de la API
                         .version("1.0.0")
+                        // Descripción detallada con instrucciones de uso
                         .description("API REST para sistema ERP - Gestión empresarial completa\n\n" +
                                 "### Autenticación\n" +
                                 "Esta API usa JWT (JSON Web Token) para autenticación.\n\n" +
@@ -39,9 +51,11 @@ public class SwaggerConfig {
                                 "- **ADMIN**: Acceso completo al sistema\n" +
                                 "- **COMERCIAL**: Gestión de clientes y pedidos\n" +
                                 "- **ALMACEN**: Gestión de productos y stock")
+                        // Información de contacto del equipo de desarrollo
                         .contact(new Contact()
                                 .name("Equipo Mikeldi")
                                 .email("desarrollo@mikeldi.com"))
+                        // Licencia bajo la cual se distribuye la API
                         .license(new License()
                                 .name("Apache 2.0")
                                 .url("https://www.apache.org/licenses/LICENSE-2.0.html")));
