@@ -19,28 +19,36 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+// Define este controlador como REST para retornar datos en formato JSON
 @RestController
+// Establece la ruta base para todos los endpoints de este controlador
 @RequestMapping("/api/auth")
+// Agrupa estos endpoints en Swagger bajo la categoría "Autenticación"
 @Tag(name = "Autenticación", description = "Endpoints para autenticación y registro de usuarios")
 public class AuthController {
     
+    // Gestor de autenticación de Spring Security para validar credenciales
     @Autowired
     private AuthenticationManager authenticationManager;
     
+    // Servicio de lógica de negocio para operaciones con usuarios
     @Autowired
     private UsuarioService usuarioService;
     
+    // Utilidad para generar y validar tokens JWT
     @Autowired
     private JwtUtil jwtUtil;
     
+    // Endpoint POST para iniciar sesión
     @PostMapping("/login")
+    // Documentación para Swagger
     @Operation(
         summary = "Iniciar sesión",
         description = "Autentica un usuario con email y contraseña, retorna un token JWT"
     )
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
         try {
-            // Autenticar usuario
+            // Crea un token de autenticación con las credenciales recibidas
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             loginRequest.getEmail(),
@@ -48,41 +56,48 @@ public class AuthController {
                     )
             );
             
+            // Establece el usuario autenticado en el contexto de seguridad
             SecurityContextHolder.getContext().setAuthentication(authentication);
             
-            // Generar token JWT
+            // Genera un token JWT válido para el usuario autenticado
             String jwt = jwtUtil.generateJwtToken(authentication);
             
-            // Obtener detalles del usuario
+            // Obtiene los detalles completos del usuario desde el objeto de autenticación
             Usuario usuario = (Usuario) authentication.getPrincipal();
             
-            // Extraer el primer rol
+            // Extrae el primer rol del usuario para simplificar la respuesta
             String rolPrincipal = "";
             if (usuario.getRoles() != null && !usuario.getRoles().isEmpty()) {
                 rolPrincipal = usuario.getRoles().iterator().next().toString();
             }
             
-            // Crear respuesta
+            // Construye el objeto de respuesta con token y datos del usuario
             LoginResponse response = new LoginResponse();
             response.setToken(jwt);
             response.setId(usuario.getId());
             response.setNombre(usuario.getNombre());
             response.setEmail(usuario.getEmail());
-            response.setRol(rolPrincipal); // Solo pasar el rol principal
+            response.setRol(rolPrincipal);
             
+            // Retorna respuesta exitosa con código 200 OK
             return ResponseEntity.ok(response);
         } catch (Exception e) {
+            // Si la autenticación falla, retorna código 401 Unauthorized
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
     }
     
+    // Endpoint POST para registrar nuevos usuarios
     @PostMapping("/register")
+    // Documentación para Swagger
     @Operation(
         summary = "Registrar nuevo usuario",
         description = "Crea un nuevo usuario en el sistema. Solo accesible por administradores"
     )
     public ResponseEntity<UsuarioDTO> registrar(@Valid @RequestBody RegistroRequest registroRequest) {
+        // Delega la creación del usuario al servicio
         UsuarioDTO nuevoUsuario = usuarioService.crearUsuario(registroRequest);
+        // Retorna el usuario creado con código 201 Created
         return ResponseEntity.status(HttpStatus.CREATED).body(nuevoUsuario);
     }
 }
