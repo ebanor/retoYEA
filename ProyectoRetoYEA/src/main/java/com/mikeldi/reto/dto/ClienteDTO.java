@@ -7,34 +7,46 @@ import jakarta.validation.constraints.Size;
 
 import java.time.LocalDateTime;
 
+// DTO para transferencia de datos de clientes entre capas de la aplicación
 public class ClienteDTO {
     
+    // Identificador único del cliente en la base de datos
     private Long id;
     
+    // Valida que el nombre no esté vacío y tenga longitud apropiada
     @NotBlank(message = "El nombre es obligatorio")
     @Size(min = 2, max = 100, message = "El nombre debe tener entre 2 y 100 caracteres")
     private String nombre;
     
+    // Valida formato de NIF/CIF español con expresión regular
+    // Acepta formato DNI (12345678A) o CIF (A1234567B)
     @NotBlank(message = "El NIF/CIF es obligatorio")
     @Pattern(regexp = "^[0-9]{8}[A-Z]$|^[A-Z][0-9]{7}[A-Z]$", 
              message = "Formato de NIF/CIF inválido (ej: 12345678A o A1234567B)")
     private String nif;
     
+    // Valida que el email tenga formato correcto
     @Email(message = "Email inválido")
     private String email;
     
+    // Campos opcionales para información de contacto y ubicación
     private String telefono;
     private String direccion;
     private String codigoPostal;
     private String ciudad;
     private String provincia;
+    
+    // Indica si el cliente está activo o dado de baja
     private Boolean activo;
+    
+    // Timestamp de cuándo se registró el cliente en el sistema
     private LocalDateTime fechaCreacion;
     
-    // Constructores
+    // Constructor vacío requerido por frameworks como Jackson para deserialización JSON
     public ClienteDTO() {
     }
     
+    // Constructor con todos los parámetros para facilitar la creación de objetos completos
     public ClienteDTO(Long id, String nombre, String nif, String email, String telefono, 
                       String direccion, String codigoPostal, String ciudad, String provincia, 
                       Boolean activo, LocalDateTime fechaCreacion) {
@@ -51,7 +63,7 @@ public class ClienteDTO {
         this.fechaCreacion = fechaCreacion;
     }
     
-    // Getters y Setters
+    // Getters y Setters para acceso controlado a los atributos
     public Long getId() {
         return id;
     }

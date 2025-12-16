@@ -6,37 +6,52 @@ import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDateTime;
 
+// DTO que representa un movimiento de inventario (entrada, salida o ajuste)
 public class MovimientoStockDTO {
     
+    // Identificador único del movimiento en la base de datos
     private Long id;
     
+    // Referencia al producto afectado por este movimiento
     @NotNull(message = "El producto es obligatorio")
     private Long productoId;
+    
+    // Nombre del producto para mostrar sin cargar entidad completa
     private String productoNombre;
     
+    // Tipo de movimiento: ENTRADA, SALIDA o AJUSTE
     @NotNull(message = "El tipo de movimiento es obligatorio")
     private TipoMovimiento tipo;
     
+    // Cantidad de unidades afectadas en el movimiento
     @NotNull(message = "La cantidad es obligatoria")
     @Min(value = 1, message = "La cantidad debe ser al menos 1")
     private Integer cantidad;
     
+    // Stock antes de aplicar el movimiento (para auditoría)
     private Integer stockAnterior;
+    
+    // Stock después de aplicar el movimiento
     private Integer stockNuevo;
     
+    // Usuario que registró el movimiento para trazabilidad
     private Long usuarioId;
     private String usuarioNombre;
     
+    // Pedido relacionado si el movimiento es automático por venta
     private Long pedidoId;
+    
+    // Descripción o justificación del movimiento manual
     private String motivo;
     
+    // Timestamp exacto de cuándo se realizó el movimiento
     private LocalDateTime fechaMovimiento;
     
-    // Constructores
+    // Constructor vacío para deserialización JSON
     public MovimientoStockDTO() {
     }
     
-    // Getters y Setters
+    // Getters y Setters para acceso controlado a los atributos
     public Long getId() {
         return id;
     }

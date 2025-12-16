@@ -3,18 +3,32 @@ package com.mikeldi.reto.dto;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+// DTO para reportes de ventas agregados por fecha
 public class ReporteVentasDTO {
     
+    // Fecha del reporte (día, semana o mes según agregación)
     private LocalDate fecha;
+    
+    // Cantidad de pedidos realizados en esta fecha
     private Integer totalPedidos;
+    
+    // Cantidad de facturas emitidas en esta fecha
     private Integer totalFacturas;
+    
+    // Importe total de todas las ventas (con IVA incluido)
     private BigDecimal ventasTotales;
+    
+    // Importe de facturas aún pendientes de cobro
     private BigDecimal ventasPendientes;
+    
+    // Importe de facturas ya cobradas
     private BigDecimal ventasPagadas;
     
+    // Constructor vacío para instanciación
     public ReporteVentasDTO() {
     }
     
+    // Constructor completo para facilitar la creación desde consultas SQL
     public ReporteVentasDTO(LocalDate fecha, Integer totalPedidos, Integer totalFacturas, 
                            BigDecimal ventasTotales, BigDecimal ventasPendientes, BigDecimal ventasPagadas) {
         this.fecha = fecha;
@@ -25,7 +39,7 @@ public class ReporteVentasDTO {
         this.ventasPagadas = ventasPagadas;
     }
     
-    // Getters y Setters
+    // Getters y Setters para acceso a los datos del reporte
     public LocalDate getFecha() {
         return fecha;
     }

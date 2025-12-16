@@ -6,32 +6,49 @@ import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+// DTO para transferir datos de facturas entre capas
 public class FacturaDTO {
     
+    // Identificador único de la factura en la base de datos
     private Long id;
+    
+    // Número secuencial generado automáticamente (ej: FACT-2025-001)
     private String numeroFactura;
     
+    // Referencia al pedido desde el cual se emite esta factura
     @NotNull(message = "El pedido es obligatorio")
     private Long pedidoId;
     
+    // Datos del cliente para mostrar en el DTO sin necesidad de cargar la entidad completa
     private Long clienteId;
     private String clienteNombre;
     
+    // Fecha en que se emite la factura
     private LocalDate fechaEmision;
+    
+    // Fecha límite de pago (normalmente 30-60 días después de emisión)
     private LocalDate fechaVencimiento;
+    
+    // Estado actual: PENDIENTE, PAGADA, VENCIDA, CANCELADA
     private EstadoFactura estado;
     
+    // Importe sin IVA aplicado
     private BigDecimal totalBase;
+    
+    // Importe del IVA calculado sobre la base imponible
     private BigDecimal totalIva;
+    
+    // Importe total a pagar (base + IVA)
     private BigDecimal totalFinal;
     
+    // Campo opcional para notas o comentarios adicionales
     private String observaciones;
     
-    // Constructores
+    // Constructor vacío requerido para deserialización JSON
     public FacturaDTO() {
     }
     
-    // Getters y Setters
+    // Getters y Setters para acceso controlado a los atributos
     public Long getId() {
         return id;
     }

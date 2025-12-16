@@ -2,17 +2,32 @@ package com.mikeldi.reto.dto;
 
 import java.util.Set;
 
+// DTO que encapsula la respuesta exitosa de un inicio de sesión
 public class LoginResponse {
+    
+    // Token JWT que el cliente debe incluir en futuras peticiones
     private String token;
+    
+    // Identificador único del usuario autenticado
     private Long id;
+    
+    // Nombre completo del usuario para mostrar en la interfaz
     private String nombre;
+    
+    // Email del usuario autenticado
     private String email;
+    
+    // Conjunto de roles del usuario (puede tener múltiples)
     private Set<?> roles;
+    
+    // Rol principal simplificado como string para la interfaz
     private String rol;
     
+    // Constructor vacío para instanciación
     public LoginResponse() {
     }
     
+    // Constructor con parámetros principales para facilitar creación
     public LoginResponse(String token, Long id, String nombre, String email, Set<?> roles) {
         this.token = token;
         this.id = id;
@@ -21,7 +36,7 @@ public class LoginResponse {
         this.roles = roles;
     }
     
-    // Getters y Setters
+    // Getters y Setters para acceso a los atributos
     public String getToken() {
         return token;
     }

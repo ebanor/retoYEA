@@ -5,42 +5,58 @@ import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+// DTO que representa un producto del catálogo con validaciones de negocio
 public class ProductoDTO {
     
+    // Identificador único del producto en la base de datos
     private Long id;
     
+    // Nombre comercial del producto con validación de longitud
     @NotBlank(message = "El nombre es obligatorio")
     @Size(min = 2, max = 100, message = "El nombre debe tener entre 2 y 100 caracteres")
     private String nombre;
     
+    // Descripción detallada del producto (opcional)
     private String descripcion;
     
+    // Precio de venta unitario, debe ser mayor que cero
     @NotNull(message = "El precio es obligatorio")
     @DecimalMin(value = "0.01", message = "El precio debe ser mayor que 0")
     private BigDecimal precio;
     
+    // Porcentaje de IVA aplicable (ej: 21 para 21%)
     @NotNull(message = "El IVA es obligatorio")
     @DecimalMin(value = "0", message = "El IVA no puede ser negativo")
     @DecimalMax(value = "100", message = "El IVA no puede ser mayor a 100")
     private BigDecimal iva;
     
+    // Cantidad disponible en inventario, no puede ser negativo
     @NotNull(message = "El stock actual es obligatorio")
     @Min(value = 0, message = "El stock no puede ser negativo")
     private Integer stockActual;
     
+    // Umbral mínimo antes de generar alerta de reposición
     @NotNull(message = "El stock mínimo es obligatorio")
     @Min(value = 0, message = "El stock mínimo no puede ser negativo")
     private Integer stockMinimo;
     
+    // Categoría para clasificación y filtrado de productos
     private String categoria;
+    
+    // Indica si el producto está disponible para venta
     private Boolean activo;
+    
+    // Flag calculado: true cuando stockActual <= stockMinimo
     private Boolean stockBajo;
+    
+    // Timestamp de cuándo se registró el producto en el sistema
     private LocalDateTime fechaCreacion;
     
-    // Constructores
+    // Constructor vacío para deserialización JSON
     public ProductoDTO() {
     }
     
+    // Constructor completo para facilitar creación de objetos en servicios
     public ProductoDTO(Long id, String nombre, String descripcion, BigDecimal precio, 
                        BigDecimal iva, Integer stockActual, Integer stockMinimo, 
                        String categoria, Boolean activo, Boolean stockBajo, LocalDateTime fechaCreacion) {
@@ -57,7 +73,7 @@ public class ProductoDTO {
         this.fechaCreacion = fechaCreacion;
     }
     
-    // Getters y Setters
+    // Getters y Setters para acceso controlado a los atributos
     public Long getId() {
         return id;
     }

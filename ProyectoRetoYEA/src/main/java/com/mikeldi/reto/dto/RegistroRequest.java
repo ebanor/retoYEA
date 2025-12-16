@@ -7,26 +7,32 @@ import jakarta.validation.constraints.Size;
 
 import java.util.List;
 
+// DTO para encapsular los datos necesarios al registrar un nuevo usuario
 public class RegistroRequest {
     
+    // Nombre completo del usuario a crear
     @NotBlank(message = "El nombre es obligatorio")
     @Size(min = 2, max = 100, message = "El nombre debe tener entre 2 y 100 caracteres")
     private String nombre;
     
+    // Email único que servirá como identificador de login
     @NotBlank(message = "El email es obligatorio")
     @Email(message = "Email inválido")
     private String email;
     
+    // Contraseña en texto plano que será cifrada antes de almacenarla
     @NotBlank(message = "La contraseña es obligatoria")
     @Size(min = 6, message = "La contraseña debe tener al menos 6 caracteres")
     private String password;
     
+    // Lista de roles asignados al nuevo usuario (ADMIN, COMERCIAL, ALMACEN)
     private List<Role> roles;
     
+    // Constructor vacío para deserialización JSON
     public RegistroRequest() {
     }
     
-    // Getters y Setters
+    // Getters y Setters para acceso a los atributos
     public String getNombre() {
         return nombre;
     }
